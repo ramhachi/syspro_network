@@ -10,6 +10,8 @@
 #include <unistd.h> // https://linux.die.net/man/2/read
 #include <string>
 #include <sstream>
+#include <bitset>
+#include <sys/socket.h>
 
 // このプログラム，command.client.cppとcommand.server.cpp　は，指導書p. 5の第二段落で例として取り上げられている，文字列符号化を使い，簡単な遠隔操作コマンドを実装したものです．
 // 
@@ -60,6 +62,7 @@ int main(int argc, char *argv[])
     }
 
     // サーバのアドレス等を初期化。
+    std::cout << "Server IP: " << serv_ip << std::endl;
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
