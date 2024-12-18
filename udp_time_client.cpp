@@ -25,6 +25,7 @@ const int BUFF_SIZE = 64; // バッファのサイズ
  */
 int main(int argc, char* argv[])
 {
+    while (1)    {
     using namespace std;
     cout << "upd time client v1.0.0" << endl; // ソースコードへの変更を行ったら数値を変える．
     string serv_ip = "127.0.0.1"; // ループバックアドレス
@@ -48,8 +49,11 @@ int main(int argc, char* argv[])
         return -1;
     }
     // クエリ送信．（'query'という文字列）を送信するだけ．
-    string msg = "query";
-    n = sendto(socketd, msg.c_str(), msg.size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    //ここを変えることによって送信内容を変えることができる。
+    //while (1)    {
+        string msg  ;
+        std::cin >> msg;
+    n = sendto(socketd, msg.c_str(), msg.size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
     if (n < 0) {
         cout << "failed to receive a message.\n";
         return -1;
@@ -66,3 +70,6 @@ int main(int argc, char* argv[])
     // ソケットを閉じる
     close(socketd);
 }
+    }
+    
+    

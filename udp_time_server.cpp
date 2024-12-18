@@ -69,6 +69,11 @@ int main(int argc, char* argv[])
         }
 
         cout << "Received a query from [" << inet_ntoa(clnt_addr.sin_addr) << ", " << htons(clnt_addr.sin_port) << "]" << endl;
+        //buffの最後の終端文字はいらないので、終端文字を削除する。
+        buff[n] = '\0'; // 文字列の終端文字を追加．
+        
+        //ここに通信した文字列を表示するコードを追加する。
+        cout << "Received a query: " << buff << endl;
 
         // 現在時刻取得
         time(&now);
