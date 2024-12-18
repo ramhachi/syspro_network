@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
 
     // サーバのアドレス等を初期化。
     std::cout << "Server IP: " << serv_ip << std::endl;
+    int hogehoge = 3422;//テスト。
+
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
