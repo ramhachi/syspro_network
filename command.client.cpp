@@ -10,7 +10,7 @@
 #include <unistd.h> // https://linux.die.net/man/2/read
 #include <string>
 #include <sstream>
-#include<vector>
+
 // このプログラム，command.client.cppとcommand.server.cpp　は，指導書p. 5の第二段落で例として取り上げられている，文字列符号化を使い，簡単な遠隔操作コマンドを実装したものです．
 // 
 // <命令><空白><数値><空白><命令><数値>・・・
