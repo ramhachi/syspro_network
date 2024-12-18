@@ -16,15 +16,16 @@
 #include <chrono>
 #include <ctime>
 #include <unistd.h> // https://linux.die.net/man/2/read
-
+#include <chrono>
 const int BUFF_SIZE = 64; // バッファのサイズ
-
 
 /*
  * UDP Daytimeクライアント
  */
 int main(int argc, char* argv[])
 {
+     std::chrono::system_clock::time_point  start, end; //main関数内での時間計測のための変数
+
     while (1)    {
     using namespace std;
     cout << "upd time client v1.0.0" << endl; // ソースコードへの変更を行ったら数値を変える．
@@ -48,11 +49,14 @@ int main(int argc, char* argv[])
         cout << "Failed to create a client socket.\n";
         return -1;
     }
-    // クエリ送信．（'query'という文字列）を送信するだけ．
     //ここを変えることによって送信内容を変えることができる。
+//ここでクエリを送信する。　この時に好きな値を送信することができる。
     //while (1)    {
         string msg  ;
         std::cin >> msg;
+        //エコーバックにどれくらい実行時間がかかるかを計測する。
+    start = chrono::system_clock::now();
+
     n = sendto(socketd, msg.c_str(), msg.size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
     if (n < 0) {
         cout << "failed to receive a message.\n";
@@ -66,7 +70,10 @@ int main(int argc, char* argv[])
     }
     buff[n] = 0; // 終端文字列を追加．送信者が終端文字列を入れてデータを送ってきているとは限らない．
     cout << "Time: " << buff <<", " << htons(serv_addr.sin_port)<< "\n";
-
+    end = chrono::system_clock::now();
+//hogeの宣言
+double hoge = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    cout << "RTT time: " << hoge << "ms" << endl;
     // ソケットを閉じる
     close(socketd);
 }
