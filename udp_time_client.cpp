@@ -18,6 +18,7 @@
 #include <unistd.h> // https://linux.die.net/man/2/read
 #include <chrono>
 #include <random>
+#include <string>
 const int BUFF_SIZE = 64; // バッファのサイズ
 
 using namespace std;
@@ -28,19 +29,34 @@ using namespace std;
 
 //任意の文字数の文字列を生成する関数
 std::string random_string(int length) {
-    auto randchar = []() -> char {//関数内で関数を定義している。　この関数はchar型の文字を返す。
-        const char charset[] =
-                "0123456789"
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                "abcdefghijklmnopqrstuvwxyz"
-                "!@#$%^&*()_+{}|:<>?~";
-        const size_t max_index = (sizeof(charset) - 1);
-        return charset[rand() % max_index];//乱数を生成している。
-    };
-    std::string str(length, 0);
-    std::generate_n(str.begin(), length, randchar);//generate_nは第一引数に指定された数だけ第三引数の関数を呼び出す。
+    std::random_device seed_gen;
+    std::uniform_int_distribution<> dist(0x21,0x7e );//乱数を生成する関数の用意
+    string str="" ;
+    char c ;
+  std::default_random_engine engine(seed_gen());
+    for (int k = 0; k < length; k++){
+        c= dist(engine);
+        str +=c;
+    }
+    
     return str;
 }
+
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+
+
+
+//!時間取得
+double calcTime()
+{
+    struct::timespec getTime;
+    clock_gettime(CLOCK_MONOTONIC, &getTime);
+    return (getTime.tv_sec + getTime.tv_nsec*1e-9) *1000;
+}
+
+
 
 
 
@@ -70,20 +86,28 @@ int main(int argc, char* argv[])
         cout << "Failed to create a client socket.\n";
         return -1;
     }
+    double start , end ;
+    int trytime = 1000;
+    double totaltime= 0;
+
     while (1)    {
-    cout << "Enter a message: "<< endl;
+    cout << "文字数を入力しよう: "<< endl;
     //ここを変えることによって送信内容を変えことができる。
 //ここでクエリを送信する。　この時に好きな値を送信することができる。
         string msg  ;
         //cinで入力をすると長い文字列が入力できないから乱数を用いて入力を行う。
         //長い文字列を用いるのは通信時間を求めるためである。
-        //std::cin >> msg;//ここはコメントアウトしておく
-        msg = random_string(10000);//ここで10000文字の文字列を生成している。
+        int num = 0;
+        std::cin >> num;//ここはコメントアウトしておく
+        msg = random_string(num);//ここでnum文字の文字列を生成している。
         //エコーバックにどれくらい実行時間がかかるかを計測する。
-        std::cout << "送ったメッセージは msg: " << msg << std::endl;
+        for (int m = 0 ; m < trytime ;m++){
+                   msg = "";
+                    msg = random_string(num);//ここでnum文字の文字列を生成している。
+        //std::cout << "送ったメッセージは msg: " << msg << std::endl;
 
         //送信開始
-    start = chrono::system_clock::now();//ここで時間を計測する
+     start = calcTime();
 
 //ここで送信を行う。nは送信した文字数を返す。nが-1の時はエラーが発生している。
     n = sendto(socketd, msg.c_str(), msg.size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
@@ -99,16 +123,21 @@ int main(int argc, char* argv[])
     }
     buff[n] = 0; // 終端文字列を追加．送信者が終端文字列を入れてデータを送ってきているとは限らない．
     cout << "Time: " << buff <<", " << htons(serv_addr.sin_port)<< "\n";
-    end = chrono::system_clock::now();
+    
+     end = calcTime();
 //実行時間を表す変数の宣言
-double taketime = chrono::duration_cast<chrono::milliseconds>(end - start).count();//型変換を用いてミリ秒に変換している。
+    double taketime = end - start ; 
     cout << "RTT time: " << taketime  << "ms" << endl;
-//一秒間の間隔をあける。
+    totaltime += taketime ;
+        }
+    }
+    double averagetime = totaltime / trytime;
+    cout << "Average RTT time: " << averagetime << "ms" << endl;
     sleep(1);//一秒間の間隔をあけるための関数。
 
     // ソケットを閉じる
     close(socketd);
-}
+
     }
     
     

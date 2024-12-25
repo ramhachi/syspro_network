@@ -73,11 +73,11 @@ int main(int argc, char* argv[])
         buff[n] = '\0'; // 文字列の終端文字を追加．
         //終端文字は、文字列の終わりを示す特別な文字である。これを設定することで、文字列の終わりを示すことができる。
 
-        //もし、クライアントからのクエリが"exit"だったら、サーバを終了する。
-        if (strcmp(buff, "exit") == 0) {
+        /*//もし、クライアントからのクエリが"exit"だったら、サーバを終了する。
+        if (strcmp(buff, "exit") == 0) {//
             cout << "exit command received. The server will be terminated.\n";
             break;
-        }
+        }*/
         
         //ここに通信した文字列を表示するコードを追加する。
         cout << "Received a query: " << buff << endl;
