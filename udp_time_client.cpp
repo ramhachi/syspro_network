@@ -42,9 +42,6 @@ std::string random_string(int length) {
     return str;
 }
 
-#include <iostream>
-#include <stdio.h>
-using namespace std;
 
 
 

@@ -15,7 +15,38 @@
 #include <iostream>
 #include <unistd.h> // https://linux.die.net/man/2/read
 #include <string>
+#include <chrono>
+#include <ctime>
+#include <unistd.h> // https://linux.die.net/man/2/read
+#include <random>
+using namespace std;
+
 const int BUFF_SIZE = 64; // バッファのサイズ
+//任意の文字数の文字列を生成する関数
+std::string random_string(int length) {
+    std::random_device seed_gen;
+    std::uniform_int_distribution<> dist(0x21,0x7e );//乱数を生成する関数の用意
+    string str="" ;
+    char c ;
+  std::default_random_engine engine(seed_gen());
+    for (int k = 0; k < length; k++){
+        c= dist(engine);
+        str +=c;
+    }
+    
+    return str;
+}
+
+
+//!時間取得
+double calcTime()//これはこのサイトのものを流用した。https://qiita.com/yagiyuki/items/7d9b2512469b29ca88b9
+{
+    struct::timespec getTime;
+    clock_gettime(CLOCK_MONOTONIC, &getTime);
+    return (getTime.tv_sec + getTime.tv_nsec*1e-9) *1000;
+}
+
+
 
 int main(int argc, char* argv[])
 {
@@ -34,7 +65,17 @@ int main(int argc, char* argv[])
     }
     char buff[BUFF_SIZE];// 受信用バッファ
     int n = 0; // 戻り値の保存用に使う変数．
+    
 
+    string msg = "";//ここで、メッセージを設定している。
+    int length,trytime;
+    double start ,end ,totaltime , avetime =0;
+    cout <<"ランダムな文字列の長さをを入力してください\n";
+    std::cin >>length ;
+    cout <<"試行回数を入力してください\n";
+    std::cin >>trytime ;
+
+    for (int i = 0 ; i < trytime;i++){
     // ソケット作成，入力はIP，ストリーム型，TCPを指定．
     int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socketd < 0) {
@@ -53,7 +94,9 @@ int main(int argc, char* argv[])
         cout << "Failed to connect to the server\n";
         return -1;
     }
-    string msg = "hello\n";
+    msg = "";
+    msg = random_string(length);
+    start = calcTime();
     n = write(socketd, msg.c_str(), msg.size()); // 文字列の送信．第二引数は記憶域．第３引数は送信するByte数．
     // 接続すると，サーバは現在時刻を文字列として返信する．
     // read(.)により，データを受信する．
@@ -67,7 +110,15 @@ int main(int argc, char* argv[])
     buff[n] = 0;
     // サーバからの返信された文字列（現在時刻）を表示
     cout << buff;
-
-    // close the socket
+    end = calcTime();
+    totaltime += end - start;
+    
+        // close the socket
     close(socketd);
+    }
+    avetime = totaltime/trytime;
+
+    cout << "平均通信時間は"<<avetime <<"です";
+
+
 }

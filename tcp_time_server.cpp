@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
             return -1;
         }
         buff[n] = 0; // 文字列として他の関数に渡す場合は，終端文字を追加することを忘れないように気をつける．
-        cout << buff;
+        cout << buff<<std::endl;
         // time(.)で現在時間取得（秒単位の歴時間）、ctime(.)で文字列に変換し、送信バッファに書き込み。
         time(&now);
 
