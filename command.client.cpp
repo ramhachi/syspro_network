@@ -54,11 +54,11 @@ int main(int argc, char *argv[])
     in_port_t serv_port = 5000;
     if (argc > 1)
     {
-        serv_ip = argv[1];
+        serv_ip = argv[1];//コマンドライン引数でIPアドレスを指定する．
     }
     if (argc > 2)
     {
-        serv_port = stoi(argv[2]);
+        serv_port = stoi(argv[2]);//コマンドライン引数でポート番号を指定する．
     }
 
     // サーバのアドレス等を初期化。
