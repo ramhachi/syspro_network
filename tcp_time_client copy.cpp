@@ -81,7 +81,6 @@ int main(int argc, char* argv[])
 
         msg = random_string(length);
         //msgに終端文字を追加する
-        msg += '\0';
         
         //このままだと、msgの長さがでかいときに送れないので、分割する処理を加える
         if (msg.length() > 1400) { //1400以上の時
@@ -93,6 +92,8 @@ int main(int argc, char* argv[])
         } else {
             sendmsgs.push_back(msg);
         }
+        //終端文字があるかどうか確認
+        sendmsgs[sendmsgs.size()-1] += '\0';
 
         
 

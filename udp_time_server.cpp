@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         cout << "Failed to bind a socket.\n";
         return -1;
     }
-
+    string msg ="" ;
     // クライアントからのクエリを待ち受け．
     while (true) {
         // クライアントからクエリ文字列を待ち受ける．
@@ -69,19 +69,13 @@ int main(int argc, char* argv[])
         }
 
         cout << "Received a query from [" << inet_ntoa(clnt_addr.sin_addr) << ", " << htons(clnt_addr.sin_port) << "]" << endl;
-        //buffの最後の終端文字はいらないので、終端文字を削除する。
-        buff[n] = '\0'; // 文字列の終端文字を追加．
-        //終端文字は、文字列の終わりを示す特別な文字である。これを設定することで、文字列の終わりを示すことができる。
-
-        /*//もし、クライアントからのクエリが"exit"だったら、サーバを終了する。
-        if (strcmp(buff, "exit") == 0) {//
-            cout << "exit command received. The server will be terminated.\n";
-            break;
-        }*/
-        
-        //ここに通信した文字列を表示するコードを追加する。
-        cout << "Received a query: " << buff << endl;
-
+        //もし、buffの最後が終端文字でなかったらmsgにbuffの中身を追加する
+        msg += buff;
+        //もし、buffの最後が終端文字だったらmsgを表示する
+        if (buff[n-1] == '\0'){
+            cout << "Received a query: " << msg << endl;
+            msg = "";
+            
         // 現在時刻取得
         time(&now);
         string msg = string("from shibata ") + ctime(&now); // string クラスは加算演算子で文字列を結合可能．
@@ -92,6 +86,16 @@ int main(int argc, char* argv[])
             cout << "Failed to write a message to the socket.\n";
             return -1;
         }
+
+        }
+        //終端文字は、文字列の終わりを示す特別な文字である。これを設定することで、文字列の終わりを示すことができる。
+
+        /*//もし、クライアントからのクエリが"exit"だったら、サーバを終了する。
+        if (strcmp(buff, "exit") == 0) {//
+            cout << "exit command received. The server will be terminated.\n";
+            break;
+        }*/
+        
     }
 
     // ソケットを閉じる．

@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
         return -1;
     }
     double start , end ;
-    int trytime = 1000;
+    int trytime = 1;
     double totaltime= 0;
 
     while (1)    {
@@ -106,11 +106,25 @@ int main(int argc, char* argv[])
         //送信開始
      start = calcTime();
 
+     //msgの最後に終端文字を設定
+        msg += '\0';
+     std::vector <string> msglist;
+     if (msg.size() > 1400){
+        for(int i = 0 ; i < msg.size() ; i+=1400){
+            msglist.push_back(msg.substr(i,1400));//1400文字ずつに分割している。
+        }
+     }
+     else{
+         msglist.push_back(msg);
+     }
+
 //ここで送信を行う。nは送信した文字数を返す。nが-1の時はエラーが発生している。
-    n = sendto(socketd, msg.c_str(), msg.size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
+for (int i = 0 ; i < msglist.size(); i++){
+    n = sendto(socketd, msglist[i].c_str(), msglist[i].size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
     if (n < 0) {//エラーが発生した時の処理
         cout << "failed to receive a message.\n";
         return -1;
+    }
     }
     // サーバから現在時刻を文字列として受信．
     n = recvfrom(socketd, buff, sizeof(buff)-1, 0, NULL, NULL); // 終端文字列を入れるために，sizeof(buff)-1 として，文字列一つ分必ず余裕を持たせてデータを受信する．buff をこのまま文字列として使わない場合は全記憶を受信に使う．

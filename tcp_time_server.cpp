@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
 
     time_t now;           // 時間
     char buff[BUFF_SIZE]; // 送信用バッファ（６４バイト）
+    bool flag = false;     // フラグ
 
     // パラメータの初期化
     serv_addr.sin_family = AF_INET;
@@ -62,13 +63,13 @@ int main(int argc, char *argv[])
         cout << "Filaed to listen to a socket.\n";
         return -1;
     }
-
+    string msghdr = "";
+    int count = 0;
     // クライアントから接続要求があれば、順次対応
     while (true)
     {
-        // accept(.)により、クライアントからの接続要求を受け付ける。
-        // 戻り値はクライアントとのデータ通信用ソケット記述子、エラーの場合は０以下の値が返される。
         cout << "Waiting for a client..." << endl;
+        cout << "count: " << count << endl;
         clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
 
         // クライアントのIPアドレスとポート番号を表示。
@@ -78,20 +79,56 @@ int main(int argc, char *argv[])
         n = read(clnt_socket, buff, sizeof(buff) - 1);
         if(n <= 0){
             // 相手の通信が切断されている．
-            return -1;
+            close(clnt_socket);
+            continue;
         }
-        buff[n] = 0; // 文字列として他の関数に渡す場合は，終端文字を追加することを忘れないように気をつける．
-        cout << buff<<std::endl;
+        //もし、buffの最後が終端文字でなかったらmsgにbuffの中身を追加する
+        if (buff[n-1] != '\0'){
+            msghdr += buff;
+            //デバッグ
+            cout << "Received a buff: " << buff << endl;
+            close(clnt_socket);
+        }
+        else{
+            msghdr += buff;
+            cout << "Received a query: " << msghdr << endl;
+            msghdr = "";
+            flag = true;//終わったことを示すフラグ
+            cout << "flag is true" << endl;
+            close(clnt_socket);
+        }
+
+        if (flag)
+        {
+            clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
+            time(&now);
+            string msg = ctime(&now);
+
+            // クライアントソケットにバッファの内容を書き込む。
+            n = write(clnt_socket, msg.c_str(), msg.size());
+
+            // クライアントとの通信は終了したので、ソケットを閉じる。
+            close(clnt_socket);
+        }
+        //もし、buffの最後が終端文字でなかったらmsgにbuffの中身を追加する
+        if (buff[n-1] != '\0'){
+            msghdr += buff;
+            //デバッグ
+            cout << "Received a buff: " << buff << endl;
+                    close(clnt_socket);
+
+        }
+        else{
+            msghdr += buff;
+            cout << "Received a query: " << msghdr << endl;
+            msghdr = "";
+            flag = true;//終わったことを示すフラグ
+            cout << "flag is true" << endl;
+            close(clnt_socket);
+        }
+        
         // time(.)で現在時間取得（秒単位の歴時間）、ctime(.)で文字列に変換し、送信バッファに書き込み。
-        time(&now);
-
-        string msg = ctime(&now);
-
-        // クライアントソケットにバッファの内容を書き込む。
-        n = write(clnt_socket, msg.c_str(), msg.size());
-
-        // クライアントとの通信は終了したので、ソケットを閉じる。
-        close(clnt_socket);
+        
     }
 
     // 受付用のソケットを閉じる。
