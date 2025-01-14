@@ -94,11 +94,38 @@ int main(int argc, char* argv[])
             sendmsgs.push_back(msg);
         }
 
-        
-
         start = calcTime();
         for (int j = 0; j < sendmsgs.size(); j++) {
-        //ここから、サーバに接続する処理ーーーーーーーー
+            // ソケット作成，入力はIP，ストリーム型，TCPを指定．
+            int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (socketd < 0) {
+                cout << "Failed to createa socket\n";
+                return -1;
+            }
+            struct sockaddr_in serv_addr;
+            serv_addr.sin_family = AF_INET;
+            serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
+            serv_addr.sin_port = htons(serv_port);
+
+            // サーバに接続する．
+            n = connect(socketd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+            if (n < 0) {
+                cout << "Failed to connect to the server\n";
+                return -1;
+            }
+
+            n = write(socketd, sendmsgs[j].c_str(), sendmsgs[j].length());
+            if (n < 0) {
+                cout << "failed to write to a socket\n";
+                return -1;
+            }
+            //通信が終わったら、ソケットを閉じる
+            close(socketd);
+        }
+
+        //通信の終わりを示すため空の文字列を送信する
+        string endmsg = "";
+        endmsg += '\0';
         // ソケット作成，入力はIP，ストリーム型，TCPを指定．
         int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (socketd < 0) {
@@ -116,24 +143,22 @@ int main(int argc, char* argv[])
             cout << "Failed to connect to the server\n";
             return -1;
         }
-        //ここまでがサーバに接続する処理ーーーーーーーー
-            n = write(socketd, sendmsgs[j].c_str(), sendmsgs[j].length());
-            if (n < 0) {
-                cout << "failed to write to a socket\n";
-                return -1;
-            }
-            //通信が終わったら、ソケットを閉じる
-            close(socketd);
-        }
 
-//流し終わったら、サーバからの返信を受け取る
-  // ソケット作成，入力はIP，ストリーム型，TCPを指定．
-        int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        n = write(socketd, endmsg.c_str(), endmsg.length());
+        if (n < 0) {
+            cout << "failed to write to a socket\n";
+            return -1;
+        }
+        //通信が終わったら、ソケットを閉じる
+        close(socketd);
+
+        //流し終わったら、サーバからの返信を受け取る
+        // ソケット作成，入力はIP，ストリーム型，TCPを指定．
+         socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (socketd < 0) {
             cout << "Failed to createa socket\n";
             return -1;
         }
-        struct sockaddr_in serv_addr;
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
         serv_addr.sin_port = htons(serv_port);
@@ -155,7 +180,7 @@ int main(int argc, char* argv[])
             return -1;
         }
         // readの戻り値が 0 の場合，相手が接続を遮断したことを意味する．
-        buff[n] = 0;
+        buff[n] = '\0'; // 終端文字を追加
         // サーバからの返信された文字列（現在時刻）を表示
         cout << buff;
         end = calcTime();

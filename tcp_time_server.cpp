@@ -64,12 +64,10 @@ int main(int argc, char *argv[])
         return -1;
     }
     string msghdr = "";
-    int count = 0;
     // クライアントから接続要求があれば、順次対応
     while (true)
     {
         cout << "Waiting for a client..." << endl;
-        cout << "count: " << count << endl;
         clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
 
         // クライアントのIPアドレスとポート番号を表示。
@@ -82,22 +80,18 @@ int main(int argc, char *argv[])
             close(clnt_socket);
             continue;
         }
-        //もし、buffの最後が終端文字でなかったらmsgにbuffの中身を追加する
-        if (buff[n-1] != '\0'){
-            msghdr += buff;
-            //デバッグ
-            cout << "Received a buff: " << buff << endl;
-            close(clnt_socket);
-        }
-        else{
-            msghdr += buff;
-            cout << "Received a query: " << msghdr << endl;
-            msghdr = "";
-            flag = true;//終わったことを示すフラグ
-            cout << "flag is true" << endl;
-            close(clnt_socket);
+        msghdr += buff;
+        cout << "Received a query: " << msghdr << endl;
+        msghdr = "";
+        close(clnt_socket);
+
+        //もし、空の文字列が来たらフラグを立てる
+        if (msghdr == "")
+        {
+            flag = true;
         }
 
+        
         if (flag)
         {
             clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
@@ -109,26 +103,8 @@ int main(int argc, char *argv[])
 
             // クライアントとの通信は終了したので、ソケットを閉じる。
             close(clnt_socket);
+            flag = false;
         }
-        //もし、buffの最後が終端文字でなかったらmsgにbuffの中身を追加する
-        if (buff[n-1] != '\0'){
-            msghdr += buff;
-            //デバッグ
-            cout << "Received a buff: " << buff << endl;
-                    close(clnt_socket);
-
-        }
-        else{
-            msghdr += buff;
-            cout << "Received a query: " << msghdr << endl;
-            msghdr = "";
-            flag = true;//終わったことを示すフラグ
-            cout << "flag is true" << endl;
-            close(clnt_socket);
-        }
-        
-        // time(.)で現在時間取得（秒単位の歴時間）、ctime(.)で文字列に変換し、送信バッファに書き込み。
-        
     }
 
     // 受付用のソケットを閉じる。
