@@ -84,9 +84,9 @@ int main(int argc, char *argv[])
         cout << "Received a query: " << msghdr << endl;
         msghdr = "";
         close(clnt_socket);
-
+        string check = buff;
         //もし、空の文字列が来たらフラグを立てる
-        if (msghdr == "")
+        if (check == "")
         {
             flag = true;
         }
@@ -100,6 +100,10 @@ int main(int argc, char *argv[])
 
             // クライアントソケットにバッファの内容を書き込む。
             n = write(clnt_socket, msg.c_str(), msg.size());
+            if (n < 0) {
+                cout << "Failed to write a message to the socket.\n";
+                return -1;
+            }
 
             // クライアントとの通信は終了したので、ソケットを閉じる。
             close(clnt_socket);

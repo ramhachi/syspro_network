@@ -21,6 +21,7 @@
 #include <random>
 #include <bits/stdc++.h>
 using namespace std;
+#define defoltip "127.0.0.1"
 
 const int BUFF_SIZE = 64; // バッファのサイズ
 //任意の文字数の文字列を生成する関数
@@ -58,7 +59,7 @@ int main(int argc, char* argv[])
     // サーバのアドレスとポート番号
     // 127.0.0.1は，ループバックアドレス
     // 他のPCと通信する場合は，当該PCのIPアドレスに変更する．
-    string serv_ip = "127.0.0.1";
+    string serv_ip = "133.10.235.224";
     in_port_t serv_port = 5000;
     
     if(argc > 1)
@@ -120,19 +121,19 @@ int main(int argc, char* argv[])
                 cout << "failed to write to a socket\n";
                 return -1;
             }
-
-            // サーバからの返信を受け取る
-            n = read(socketd, buff, sizeof(buff)-1);
-            if (n < 0) {
-                // readの戻り値が負の場合，通信に不具合が生じたことを意味する．
-                cout << "failed to read from a socket\n";
-                return -1;
-            }
-            // readの戻り値が 0 の場合，相手が接続を遮断したことを意味する．
-            buff[n] = '\0'; // 終端文字を追加
-            // サーバからの返信された文字列（現在時刻）を表示
-            cout << "Received time: " << buff << endl;
         }
+
+        // サーバからの返信を受け取る
+        n = read(socketd, buff, sizeof(buff)-1);
+        if (n < 0) {
+            // readの戻り値が負の場合，通信に不具合が生じたことを意味する．
+            cout << "failed to read from a socket\n";
+            return -1;
+        }
+        // readの戻り値が 0 の場合，相手が接続を遮断したことを意味する．
+        buff[n] = '\0'; // 終端文字を追加
+        // サーバからの返信された文字列（現在時刻）を表示
+        cout << "Received time: " << buff << endl;
 
         end = calcTime();
         totaltime += end - start;

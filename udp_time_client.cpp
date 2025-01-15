@@ -20,7 +20,7 @@
 #include <random>
 #include <string>
 const int BUFF_SIZE = 1400; // バッファのサイズ
-
+#define defaltip "127.0.0.1"
 using namespace std;
 //乱数の初期化
 /*
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     
     using namespace std;
     cout << "upd time client v1.0.0" << endl; // ソースコードへの変更を行ったら数値を変える．
-    string serv_ip = "127.0.0.1"; // ループバックアドレス
+    string serv_ip = "133.10.235.224"; // ループバックアドレス
     in_port_t port_num = 5000; // ポート番号
     int n = 0; // 戻り値の保存用
     char buff[BUFF_SIZE]; // 送受信用バッファ
