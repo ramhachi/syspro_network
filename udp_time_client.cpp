@@ -19,7 +19,7 @@
 #include <chrono>
 #include <random>
 #include <string>
-const int BUFF_SIZE = 64; // バッファのサイズ
+const int BUFF_SIZE = 1400; // バッファのサイズ
 
 using namespace std;
 //乱数の初期化
@@ -109,9 +109,9 @@ int main(int argc, char* argv[])
      //msgの最後に終端文字を設定
         msg += '\0';
      std::vector <string> msglist;
-     if (msg.size() > 1400){
-        for(int i = 0 ; i < msg.size() ; i+=1400){
-            msglist.push_back(msg.substr(i,1400));//1400文字ずつに分割している。
+     if (msg.size() > BUFF_SIZE){
+        for(int i = 0 ; i < msg.size() ; i+=BUFF_SIZE){
+            msglist.push_back(msg.substr(i,BUFF_SIZE));//バッファサイズごとに分割して送信する。
         }
      }
      else{
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 for (int i = 0 ; i < msglist.size(); i++){
     n = sendto(socketd, msglist[i].c_str(), msglist[i].size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
     if (n < 0) {//エラーが発生した時の処理
-        cout << "failed to receive a message.\n";
+        cout << "failed to send a message.\n";
         return -1;
     }
     }
@@ -150,5 +150,5 @@ for (int i = 0 ; i < msglist.size(); i++){
     close(socketd);
 
     }
-    
-    
+
+

@@ -18,7 +18,7 @@
 #include <ctime>
 #include <unistd.h> // https://linux.die.net/man/2/read
 
-const int BUFF_SIZE = 64; // バッファのサイズ
+const int BUFF_SIZE = 1400; // バッファのサイズ
 
 /*
  * UDP Daytimeサーバ.
@@ -56,11 +56,15 @@ int main(int argc, char* argv[])
         return -1;
     }
     string msg ="" ;
+    int count = 0;
     // クライアントからのクエリを待ち受け．
     while (true) {
         // クライアントからクエリ文字列を待ち受ける．
         // UDPはコネクションを確立しないため，クライアントがクエリ文字列を送ってくるのを待機．
         cout << "waiting for a client...\n";
+        cout << "count: " << count << endl;
+        count++;
+
         addr_len = sizeof(clnt_addr);
         n = recvfrom(serv_socket, buff, BUFF_SIZE, 0, (struct sockaddr*)&clnt_addr, &addr_len);
         if (n < 0) {
@@ -75,6 +79,7 @@ int main(int argc, char* argv[])
         if (buff[n-1] == '\0'){
             cout << "Received a query: " << msg << endl;
             msg = "";
+            count = 0;
             
         // 現在時刻取得
         time(&now);
