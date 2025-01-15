@@ -19,6 +19,7 @@
 #include <ctime>
 #include <unistd.h> // https://linux.die.net/man/2/read
 #include <random>
+#include <bits/stdc++.h>
 using namespace std;
 
 const int BUFF_SIZE = 64; // バッファのサイズ
@@ -76,6 +77,24 @@ int main(int argc, char* argv[])
     cout <<"試行回数を入力してください\n";
     std::cin >> trytime;
 
+    // ソケット作成，入力はIP，ストリーム型，TCPを指定．
+    int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (socketd < 0) {
+        cout << "Failed to create a socket\n";
+        return -1;
+    }
+    struct sockaddr_in serv_addr;
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
+    serv_addr.sin_port = htons(serv_port);
+
+    // サーバに接続する．
+    n = connect(socketd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (n < 0) {
+        cout << "Failed to connect to the server\n";
+        return -1;
+    }
+
     for (int i = 0; i < trytime; i++) {
         std::vector<std::string> sendmsgs;
 
@@ -96,100 +115,52 @@ int main(int argc, char* argv[])
 
         start = calcTime();
         for (int j = 0; j < sendmsgs.size(); j++) {
-            // ソケット作成，入力はIP，ストリーム型，TCPを指定．
-            int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-            if (socketd < 0) {
-                cout << "Failed to createa socket\n";
-                return -1;
-            }
-            struct sockaddr_in serv_addr;
-            serv_addr.sin_family = AF_INET;
-            serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
-            serv_addr.sin_port = htons(serv_port);
-
-            // サーバに接続する．
-            n = connect(socketd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-            if (n < 0) {
-                cout << "Failed to connect to the server\n";
-                return -1;
-            }
-
             n = write(socketd, sendmsgs[j].c_str(), sendmsgs[j].length());
             if (n < 0) {
                 cout << "failed to write to a socket\n";
                 return -1;
             }
-            //通信が終わったら、ソケットを閉じる
-            close(socketd);
+
+            // サーバからの返信を受け取る
+            n = read(socketd, buff, sizeof(buff)-1);
+            if (n < 0) {
+                // readの戻り値が負の場合，通信に不具合が生じたことを意味する．
+                cout << "failed to read from a socket\n";
+                return -1;
+            }
+            // readの戻り値が 0 の場合，相手が接続を遮断したことを意味する．
+            buff[n] = '\0'; // 終端文字を追加
+            // サーバからの返信された文字列（現在時刻）を表示
+            cout << "Received time: " << buff << endl;
         }
 
-        //通信の終わりを示すため空の文字列を送信する
-        string endmsg = "";
-        endmsg += '\0';
-        // ソケット作成，入力はIP，ストリーム型，TCPを指定．
-        int socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (socketd < 0) {
-            cout << "Failed to createa socket\n";
-            return -1;
-        }
-        struct sockaddr_in serv_addr;
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
-        serv_addr.sin_port = htons(serv_port);
-
-        // サーバに接続する．
-        n = connect(socketd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-        if (n < 0) {
-            cout << "Failed to connect to the server\n";
-            return -1;
-        }
-
-        n = write(socketd, endmsg.c_str(), endmsg.length());
-        if (n < 0) {
-            cout << "failed to write to a socket\n";
-            return -1;
-        }
-        //通信が終わったら、ソケットを閉じる
-        close(socketd);
-
-        //流し終わったら、サーバからの返信を受け取る
-        // ソケット作成，入力はIP，ストリーム型，TCPを指定．
-         socketd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (socketd < 0) {
-            cout << "Failed to createa socket\n";
-            return -1;
-        }
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = inet_addr(serv_ip.c_str());
-        serv_addr.sin_port = htons(serv_port);
-
-        // サーバに接続する．
-        n = connect(socketd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-        if (n < 0) {
-            cout << "Failed to connect to the server\n";
-            return -1;
-        }
-
-        // サーバに接続したら，現在時刻を取得する．
-        // 接続すると，サーバは現在時刻を文字列として返信する．
-        // read(.)により，データを受信する．
-        n = read(socketd, buff, sizeof(buff)-1);
-        if (n < 0) {
-            // readの戻り値が負の場合，通信に不具合が生じたことを意味する．
-            cout << "failed to read from a socket( last)\n";
-            return -1;
-        }
-        // readの戻り値が 0 の場合，相手が接続を遮断したことを意味する．
-        buff[n] = '\0'; // 終端文字を追加
-        // サーバからの返信された文字列（現在時刻）を表示
-        cout << buff;
         end = calcTime();
         totaltime += end - start;
-
-        // close the socket
-        close(socketd);
     }
+
+    //通信の終わりを示すため終了メッセージを送信する
+    string endmsg = "END";
+    n = write(socketd, endmsg.c_str(), endmsg.length());
+    if (n < 0) {
+        cout << "failed to write to a socket\n";
+        return -1;
+    }
+
+    // サーバからの返信を受け取る
+    n = read(socketd, buff, sizeof(buff)-1);
+    if (n < 0) {
+        // readの戻り値が負の場合，通信に不具合が生じたことを意味する．
+        cout << "failed to read from a socket( last)\n";
+        return -1;
+    }
+    // readの戻り値が 0 の場合，相手が接続を遮断したことを意味する．
+    buff[n] = '\0'; // 終端文字を追加
+    // サーバからの返信された文字列（現在時刻）を表示
+    cout << "Received time: " << buff << endl;
 
     avetime = totaltime / trytime;
     cout << "平均通信時間は" << avetime << "です";
+
+    // close the socket
+    close(socketd);
 }
