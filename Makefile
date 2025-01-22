@@ -17,14 +17,14 @@
 # 「-w」は、警告を全て出す、「-o」でコンパイル後の実行ファイル名
 all: tts ttc uts utc tod cmds cmdc
 
-tts: tcp_time_server.cpp
-	g++ -std=c++14  -w  tcp_time_server.cpp -o tts 
-ttc: tcp_time_client.cpp
-	g++ -std=c++14  -w  tcp_time_client.cpp -o ttc 
-uts: udp_time_server.cpp
-	g++ -std=c++14  -w  udp_time_server.cpp -o uts 
-utc: udp_time_client.cpp
-	g++ -std=c++14  -w  udp_time_client.cpp -o utc 
+tts: tcp_time_server13.cpp
+	g++ -std=c++14  -w  tcp_time_server13.cpp -o tts 
+ttc: tcp_time_client12.cpp
+	g++ -std=c++14  -w  tcp_time_client12.cpp -o ttc 
+uts: udp_time_server11.cpp
+	g++ -std=c++14  -w  udp_time_server11.cpp -o uts 
+utc: udp_time_client11.cpp
+	g++ -std=c++14  -w  udp_time_client11.cpp -o utc 
 tod: ex_gettimeofday.cpp 
 	g++ -std=c++14  -w  ex_gettimeofday.cpp -o tod
 cmds:  command.server.cpp

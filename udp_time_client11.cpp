@@ -19,8 +19,8 @@
 #include <chrono>
 #include <random>
 #include <string>
-const int BUFF_SIZE = 1400; // バッファのサイズ
-#define defaltip "127.0.0.1"
+const int BUFF_SIZE = 64; // バッファのサイズ
+
 using namespace std;
 //乱数の初期化
 /*
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     
     using namespace std;
     cout << "upd time client v1.0.0" << endl; // ソースコードへの変更を行ったら数値を変える．
-    string serv_ip = "133.10.235.224"; // ループバックアドレス
+    string serv_ip = "127.0.0.1"; // ループバックアドレス
     in_port_t port_num = 5000; // ポート番号
     int n = 0; // 戻り値の保存用
     char buff[BUFF_SIZE]; // 送受信用バッファ
@@ -88,44 +88,47 @@ int main(int argc, char* argv[])
     double totaltime= 0;
 
     while (1)    {
-    cout << "文字数を入力しよう: "<< endl;
+    //cout << "文字数を入力しよう: "<< endl;
     //ここを変えることによって送信内容を変えことができる。
 //ここでクエリを送信する。　この時に好きな値を送信することができる。
         string msg  ;
+        cout <<"送信したい文字列を入力してください。" << endl;
+        cin >> msg;
         //cinで入力をすると長い文字列が入力できないから乱数を用いて入力を行う。
         //長い文字列を用いるのは通信時間を求めるためである。
         int num = 0;
-        std::cin >> num;//ここはコメントアウトしておく
-        msg = random_string(num);//ここでnum文字の文字列を生成している。
+        //std::cin >> num;//ここはコメントアウトしておく
+        //msg = random_string(num);//ここでnum文字の文字列を生成している。
         //エコーバックにどれくらい実行時間がかかるかを計測する。
-        for (int m = 0 ; m < trytime ;m++){
-                   msg = "";
-                    msg = random_string(num);//ここでnum文字の文字列を生成している。
+     //   for (int m = 0 ; m < trytime ;m++){
+              //     msg = "";
+                //    msg = random_string(num);//ここでnum文字の文字列を生成している。
         //std::cout << "送ったメッセージは msg: " << msg << std::endl;
+        //分けて送信する
+        //送信する文字列に終端文字を追加
+        msg += '\0';
+        std::string msgcopy = msg;
+        std::vector<std::string> msgvec;
+        for (int i = 0; i < msg.size() / BUFF_SIZE + 1; i++)
+        {
+            msgvec.push_back(msg.substr(i * BUFF_SIZE, BUFF_SIZE));
+        }
+        
+         
 
         //送信開始
      start = calcTime();
 
-     //msgの最後に終端文字を設定
-        msg += '\0';
-     std::vector <string> msglist;
-     if (msg.size() > BUFF_SIZE){
-        for(int i = 0 ; i < msg.size() ; i+=BUFF_SIZE){
-            msglist.push_back(msg.substr(i,BUFF_SIZE));//バッファサイズごとに分割して送信する。
-        }
-     }
-     else{
-         msglist.push_back(msg);
-     }
-
 //ここで送信を行う。nは送信した文字数を返す。nが-1の時はエラーが発生している。
-for (int i = 0 ; i < msglist.size(); i++){
-    n = sendto(socketd, msglist[i].c_str(), msglist[i].size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));//msg.c_str()は文字列をchar型に変換する。
-    if (n < 0) {//エラーが発生した時の処理
-        cout << "failed to send a message.\n";
+for (int i = 0; i < msgvec.size(); i++){
+    n = sendto(socketd, msgvec[i].c_str(), msgvec[i].size(), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (n < 0) {
+        cout << "failed to receive a message.\n";
         return -1;
     }
-    }
+}
+//最後に空文字を送信する。
+n = sendto(socketd, "", 0, 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     // サーバから現在時刻を文字列として受信．
     n = recvfrom(socketd, buff, sizeof(buff)-1, 0, NULL, NULL); // 終端文字列を入れるために，sizeof(buff)-1 として，文字列一つ分必ず余裕を持たせてデータを受信する．buff をこのまま文字列として使わない場合は全記憶を受信に使う．
     if (n < 0) {//エラーが発生した時の処理
@@ -134,21 +137,45 @@ for (int i = 0 ; i < msglist.size(); i++){
     }
     buff[n] = 0; // 終端文字列を追加．送信者が終端文字列を入れてデータを送ってきているとは限らない．
     cout << "Time: " << buff <<", " << htons(serv_addr.sin_port)<< "\n";
+    //コールバックを受信する
+
+    n = recvfrom(socketd, buff, sizeof(buff)-1, 0, NULL, NULL); // 終端文字列を入れるために，sizeof(buff)-1 として，文字列一つ分必ず余裕を持たせてデータを受信する．buff をこのまま文字列として使わない場合は全記憶を受信に使う．
+
     
      end = calcTime();
+     //受け取った文字列を表示する。
 //実行時間を表す変数の宣言
     double taketime = end - start ; 
     cout << "RTT time: " << taketime  << "ms" << endl;
     totaltime += taketime ;
+    buff [n] = 0;//終端文字を追加
+    bool flag = true;
+    //コールバックがうまくできているかのチェックをする
+    for (int i = 0; i < msgcopy.size(); i++)
+        {
+            if (msgcopy[i] != buff[i])
+            {
+                cout << "i = " << i << "msgcopy[i] = " << msgcopy[i] << "buff[i] = " << buff[i] << endl;
+                
+                flag = false;
+            }
         }
+        if (flag)
+        {
+            cout << "コールバックがうまくできている" << endl;
+        }
+        else
+        {
+            cout << "コールバックがうまくできていない" << endl;
+            flag = true;
+        }
+    cout << "------------------------" << endl;
+   //     }
     }
-    double averagetime = totaltime / trytime;
-    cout << "Average RTT time: " << averagetime << "ms" << endl;
-    sleep(1);//一秒間の間隔をあけるための関数。
 
     // ソケットを閉じる
     close(socketd);
 
     }
-
-
+    
+    

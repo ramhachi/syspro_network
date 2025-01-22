@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 {
     // パラメータ
     using namespace std;
-    cout << "tcp time server v1.0.0" << endl; // ソースコードへの変更を行ったら数値を変える．
+    cout << "TCP time server v1.0.2" << endl; // ソースコードへの変更を行ったら数値を変える．
 
     int port_num = 5000; // ポート番号
 
@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
 
     time_t now;           // 時間
     char buff[BUFF_SIZE]; // 送信用バッファ（６４バイト）
-    bool flag = false;     // フラグ
 
     // パラメータの初期化
     serv_addr.sin_family = AF_INET;
@@ -63,54 +62,41 @@ int main(int argc, char *argv[])
         cout << "Filaed to listen to a socket.\n";
         return -1;
     }
-    string msghdr = "";
+    // accept(.)により、クライアントからの接続要求を受け付ける。
+    // 戻り値はクライアントとのデータ通信用ソケット記述子、エラーの場合は０以下の値が返される。
+    cout << "Waiting for a client..." << endl;
+    clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
+
+
+
+
     // クライアントから接続要求があれば、順次対応
     while (true)
     {
-        cout << "Waiting for a client..." << endl;
-        clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
-
         // クライアントのIPアドレスとポート番号を表示。
         // それぞれ、struct sockaddr_inから取得。
         // inet_ntoa(.)は、arpa/inet.hで定義されている（Unix系の場合）。 htons はエンディアンを変換する．
-        cout << "Accepted a connection from [" << inet_ntoa(clnt_addr.sin_addr) << "," << htons(clnt_addr.sin_port) << "]" << endl;
+        
         n = read(clnt_socket, buff, sizeof(buff) - 1);
+
         if(n <= 0){
             // 相手の通信が切断されている．
-            close(clnt_socket);
-            continue;
-        }
-        msghdr += buff;
-        cout << "Received a query: " << msghdr << endl;
-        msghdr = "";
-        close(clnt_socket);
-        string check = buff;
-        //もし、空の文字列が来たらフラグを立てる
-        if (check == "")
-        {
-            flag = true;
+            return -1;
         }
 
+        buff[n] = 0; // 文字列として他の関数に渡す場合は，終端文字を追加することを忘れないように気をつける．
         
-        if (flag)
-        {
-            clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &addr_len);
-            time(&now);
-            string msg = ctime(&now);
-
-            // クライアントソケットにバッファの内容を書き込む。
-            n = write(clnt_socket, msg.c_str(), msg.size());
-            if (n < 0) {
-                cout << "Failed to write a message to the socket.\n";
-                return -1;
-            }
-
-            // クライアントとの通信は終了したので、ソケットを閉じる。
-            close(clnt_socket);
-            flag = false;
-        }
+        cout << "recieved message : " << buff << endl;
+        cout << "Accepted a connection from [" << inet_ntoa(clnt_addr.sin_addr) << "," << htons(clnt_addr.sin_port) << "]" << endl;
+        
+      //クライアントに送られたメッセージをそのまま返す
+        string msg = buff;
+        // クライアントソケットにバッファの内容を書き込む。
+        n = write(clnt_socket, msg.c_str(), msg.size());
     }
 
+    // クライアントとの通信は終了したので、ソケットを閉じる。
+    close(clnt_socket);
     // 受付用のソケットを閉じる。
     close(serv_socket);
     return 0;

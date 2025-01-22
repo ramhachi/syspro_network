@@ -18,7 +18,7 @@
 #include <ctime>
 #include <unistd.h> // https://linux.die.net/man/2/read
 
-const int BUFF_SIZE = 1400; // バッファのサイズ
+const int BUFF_SIZE = 64; // バッファのサイズ
 
 /*
  * UDP Daytimeサーバ.
@@ -55,48 +55,45 @@ int main(int argc, char* argv[])
         cout << "Failed to bind a socket.\n";
         return -1;
     }
-    string msg ="" ;
-    int count = 0;
+
     // クライアントからのクエリを待ち受け．
     while (true) {
         // クライアントからクエリ文字列を待ち受ける．
         // UDPはコネクションを確立しないため，クライアントがクエリ文字列を送ってくるのを待機．
         cout << "waiting for a client...\n";
-        cout << "count: " << count << endl;
-        count++;
-
         addr_len = sizeof(clnt_addr);
         n = recvfrom(serv_socket, buff, BUFF_SIZE, 0, (struct sockaddr*)&clnt_addr, &addr_len);
         if (n < 0) {
             cout << "failed to read a query from the socket.\n";
             return -1;
         }
+        std::string copybuff = buff;
 
         cout << "Received a query from [" << inet_ntoa(clnt_addr.sin_addr) << ", " << htons(clnt_addr.sin_port) << "]" << endl;
-        //もし、buffの最後が終端文字でなかったらmsgにbuffの中身を追加する
-        msg += buff;
-        //もし、buffの最後が終端文字だったらmsgを表示する
-        if (buff[n-1] == '\0'){
-            cout << "Received a query: " << msg << endl;
-            msg = "";
-            count = 0;
-            
-        // 現在時刻取得
-        time(&now);
-        string msg = string("from shibata ") + ctime(&now); // string クラスは加算演算子で文字列を結合可能．
-
-        // 現在時刻を文字列として，クライアントに送信する．
-        n = sendto(serv_socket, msg.c_str(), msg.size(), 0, (struct sockaddr*)&clnt_addr, sizeof(clnt_addr));
-        if (n < 0) {
-            cout << "Failed to write a message to the socket.\n";
-            return -1;
-        }
-
-        }
+        //buffの最後の終端文字はいらないので、終端文字を削除する。
+        buff[n] = '\0'; // 文字列の終端文字を追加．
         //終端文字は、文字列の終わりを示す特別な文字である。これを設定することで、文字列の終わりを示すことができる。
 
-        //もし、クライアントからのクエリが"exit"だったら、サーバを終了する。
-        
+        //ここに通信した文字列を表示するコードを追加する。
+        cout << "Received a query: " << buff << endl;
+
+        //もし、空文字が送られてきたら送信メッセージの終わりなので現在時刻を送り返す
+        if (buff[0] == '\0') {
+            // 現在時刻取得
+            time(&now);
+            string msg = string("from shibata ") + ctime(&now); // string クラスは加算演算子で文字列を結合可能．
+
+
+            // 現在時刻を文字列として，クライアントに送信する．
+            n = sendto(serv_socket, msg.c_str(), msg.size(), 0, (struct sockaddr*)&clnt_addr, sizeof(clnt_addr));
+            if (n < 0) {
+                cout << "Failed to write a message to the socket.\n";
+                return -1;
+            }
+            //受信した文字列を送り返す
+            n = sendto(serv_socket, copybuff.c_str(), copybuff.size(), 0, (struct sockaddr*)&clnt_addr, sizeof(clnt_addr));
+            //n = sendto(serv_socket, copybuff, n, 0, (struct sockaddr*)&clnt_addr, sizeof(clnt_addr));
+        }
         
     }
 
